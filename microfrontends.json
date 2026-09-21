@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/microfrontends.json",
   "applications": {
-    "cheeky-app": {
+    "Club-Cheeky": {
       "development": {
         "fallback": "smartscott.online"
       }

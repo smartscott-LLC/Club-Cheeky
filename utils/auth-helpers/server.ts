@@ -165,7 +165,9 @@ export async function requestPasswordUpdate(formData: FormData) {
 
 export async function signInWithPassword(formData: FormData) {
   const cookieStore = await cookies();
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const email = String(formData.get('email') ?? '').trim();
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const password = String(formData.get('password') ?? '').trim();
   let redirectPath: string;
 
