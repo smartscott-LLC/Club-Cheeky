@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "cheeky-app": {
+      "development": {
+        "fallback": "smartscott.online"
+      }
+    },
+    "chub": {
+      "packageName": "chub",
+      "routing": [
+        {
+          "paths": ["/lounge", "/lounge/:path*"]
+        }
+      ]
+    }
+  }
+}

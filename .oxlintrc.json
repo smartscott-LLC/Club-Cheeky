@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react/purity": "error",
+    "react/set-state-in-effect": "error"
+  },
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": [
+    "docs/lighthouse/**",
+    "docs/archives/**",
+    "cheeky_quest/**",
+    "image_to_video_pipe/**"
+  ],
+  "overrides": [
+    {
+      "files": ["types_db.ts"],
+      "rules": {
+        "typescript/no-redundant-type-constituents": "off"
+      }
+    },
+    {
+      "files": ["app/quest/page.js"],
+      "rules": {
+        "react/set-state-in-effect": "off"
+      }
+    },
+    {
+      "files": ["app/owner/page.tsx"],
+      "rules": {
+        "jsx-a11y/control-has-associated-label": "off"
+      }
+    },
+    {
+      "files": [
+        "components/ui/Profile/ProfileModal.tsx",
+        "components/ui/Owner/LoungeMonitor.tsx",
+        "components/ui/Owner/StreamLoungeMonitor.tsx",
+        "app/owner/page.tsx"
+      ],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off"
+      }
+    }
+  ]
+}

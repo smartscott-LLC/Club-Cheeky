@@ -1,0 +1,90 @@
+import { Suspense, PropsWithChildren } from 'react';
+import { Metadata } from 'next';
+import localFont from 'next/font/local';
+import Footer from '@/components/ui/Footer';
+import Navbar from '@/components/ui/Navbar';
+import Hud from '@/components/ui/HUD/Hud';
+import { Toaster } from '@/components/ui/Toasts/toaster';
+import ClubAudio from '@/components/ui/Audio/ClubAudio';
+import ServiceWorkerRegister from '@/components/ui/PWA/ServiceWorkerRegister';
+import InstallPrompt from '@/components/ui/PWA/InstallPrompt';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
+import { getURL } from '@/utils/helpers';
+import { ASSETS } from '@/utils/assets';
+import '../styles/globals.css';
+
+// The nightclub type system (founder): Fascinate for heroes, Damion for
+// headers, Rancho for body. All three are single-weight display fonts —
+// main.css sets font-synthesis: none on headings so weight utilities never
+// fake-bold them.
+const hero = localFont({
+  src: '../styles/fonts/Fascinate-Regular.ttf',
+  variable: '--font-hero',
+  display: 'swap'
+});
+const header = localFont({
+  src: '../styles/fonts/Damion-Regular.ttf',
+  variable: '--font-header',
+  display: 'swap'
+});
+const body = localFont({
+  src: '../styles/fonts/Rancho-Regular.ttf',
+  variable: '--font-body',
+  display: 'swap'
+});
+// The wordmark — gold metallic gradient on the nav/footer. Damion handles
+// the cursive script look from our local font set.
+
+const title = 'Club Cheeky — The Club for Real Connections';
+const description =
+  'A dating app built like a nightclub. Get in free with a verified ID. Live events, real matches, no gouging.';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getURL()),
+  title: title,
+  description: description,
+  // iOS "Add to Home Screen" ignores manifest icons — it needs this link,
+  // or it screenshots the page as the icon. 192 works (iOS scales to 180).
+  icons: {
+    apple: ASSETS.brand.entranceLogo,
+    icon: ASSETS.brand.entranceLogo
+  },
+  openGraph: {
+    title: title,
+    description: description
+  }
+};
+
+export default async function RootLayout({ children }: PropsWithChildren) {
+  return (
+    <html
+      lang="en"
+      className={`${hero.variable} ${header.variable} ${body.variable}`}
+    >
+      <body className="bg-black">
+        <ServiceWorkerRegister />
+        <InstallPrompt />
+        <Navbar />
+        <main
+          id="skip"
+          className="flex min-h-[calc(100dvh-4rem)] flex-col md:min-h-[calc(100dvh-5rem)]"
+        >
+          {children}
+        </main>
+        <Suspense>
+          <Hud />
+        </Suspense>
+        <Footer />
+        <Suspense>
+          <Toaster />
+        </Suspense>
+        <Suspense>
+          <ClubAudio />
+        </Suspense>
+        <SpeedInsights />
+        <Analytics />
+      </body>
+    </html>
+  );
+}

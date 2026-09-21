@@ -1,0 +1,171 @@
+import { createClient } from '@/utils/supabase/server';
+import { getUser } from '@/utils/supabase/queries';
+import { getReturnFloor } from '@/utils/return-floor';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { KIND_META } from '@/utils/events';
+import { pastDateCutoff } from '@/utils/date-now';
+import { connection } from 'next/server';
+import EventCard from '@/components/ui/Events/EventCard';
+
+export default async function EventsPage() {
+  await connection();
+  const supabase = await createClient();
+  const user = await getUser(supabase);
+  if (!user) {
+    return redirect('/signin');
+  }
+
+  // Make sure the next couple of hours of the playlist exist.
+  await supabase.rpc('ensure_floor_events', { p_hours: 2 });
+  const floorHref = await getReturnFloor();
+
+  // Your floor decides which rooms are lit. Silver=0, Gold=1, Platinum=2,
+  // Diamond=3 — every room at or below your floor is open to you.
+  const { data: tierData } = await supabase.rpc('current_tier', {
+    p_user: user.id
+  });
+  const tier = (tierData as string) ?? 'standard';
+  const rank =
+    tier === 'gold' ? 1 : tier === 'platinum' ? 2 : tier === 'diamond' ? 3 : 0;
+
+  const kinds = Object.keys(KIND_META);
+  const cutoff = pastDateCutoff(3);
+  const [{ data: events }, { data: announcements }] = await Promise.all([
+    supabase
+      .from('events')
+      .select('*')
+      .in('kind', kinds)
+      .gte('starts_at', cutoff)
+      .order('starts_at')
+      .limit(8),
+    supabase
+      .from('club_announcements')
+      .select('body, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5)
+  ]);
+
+  // The playlist spins one of each every hour — the first slot per room is
+  // its next (or current) set.
+  const nextByKind = new Map<string, NonNullable<typeof events>[number]>();
+  for (const e of events ?? []) {
+    if (!nextByKind.has(e.kind)) nextByKind.set(e.kind, e);
+  }
+
+  return (
+    <div className="bg-black">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <Link
+          href={floorHref}
+          className="text-base font-semibold font-body font-body text-club hover:text-white"
+        >
+          ← Back to the floor
+        </Link>
+        <h1 className="font-hero text-gold text-center text-4xl sm:text-5xl">
+          The Event Center
+        </h1>
+        <p className="font-body font-body text-club mx-auto mt-3 max-w-xl text-center">
+          The playlist: the Dance Floor, Speed Dating, and the Rooftop, every
+          hour on the quarter — plus Blind Date, whenever the Gold floor&apos;s
+          hostess opens the door.
+        </p>
+
+        {/* The overhead ticker — anonymous, in-app only. */}
+        {(announcements ?? []).length > 0 && (
+          <div className="mx-auto mt-8 max-w-2xl overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+            <p className="border-b border-zinc-800 px-4 py-2 text-sm font-bold uppercase tracking-[0.3em] font-body font-body text-club">
+              📢 Over the house speakers
+            </p>
+            <ul className="divide-y divide-zinc-800">
+              {(announcements ?? []).map((a, i) => (
+                <li
+                  key={i}
+                  className="font-body font-body text-club px-4 py-2 text-base"
+                >
+                  {a.body}{' '}
+                  <span className="text-sm text-cyan">
+                    {new Date(a.created_at).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* The four rooms — lit up to your floor, behind the rope past it. */}
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {kinds.map((kind) => {
+            const meta = KIND_META[kind];
+            const locked = rank < meta.rank;
+            const next = nextByKind.get(kind) ?? null;
+            return (
+              <EventCard
+                key={kind}
+                kind={kind}
+                meta={meta}
+                locked={locked}
+                nextEvent={next}
+                eventId={next?.id}
+              />
+            );
+          })}
+        </div>
+
+        {/* Blind Date — the host-driven Gold room, not on the clock. */}
+        <div className="mt-6 rounded-2xl border border-gold/40 bg-zinc-900/50">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+            <div>
+              <h3 className="font-header text-cyan text-xl">💘 Blind Date</h3>
+              <p className="font-body font-body text-club mt-1 text-sm">
+                The Gold floor&apos;s room. One hostess, up to five suitors,
+                four rounds of questions — most marks wins the date. Host when
+                you&apos;re ready; the room runs when a lady opens the door.
+              </p>
+            </div>
+            <Link
+              href="/events/blind_date"
+              className="rounded-lg bg-gold px-6 py-2.5 text-base font-extrabold text-black transition hover:bg-gold-royal"
+            >
+              Host or take a seat →
+            </Link>
+          </div>
+        </div>
+
+        {/* Icebreakers — not events: things matched couples do together. */}
+        <div className="mt-6 rounded-2xl border border-club/40 bg-zinc-900/50">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+            <div>
+              <h3 className="font-header text-cyan text-xl">🧊 Icebreakers</h3>
+              <p className="font-body font-body text-club mt-1 text-sm">
+                Not events — things for matched couples to do instead of staring
+                at empty chat. Date Night is the first one: five questions, both
+                of you tap the same answer to lock it. Free, and it starts from
+                any matched chat.
+              </p>
+            </div>
+            <Link
+              href="/messages"
+              className="rounded-lg bg-club px-6 py-2.5 text-base font-extrabold text-white transition hover:bg-club-cotton"
+            >
+              Start one from a chat →
+            </Link>
+          </div>
+        </div>
+
+        {/* The Gift Shop link */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/gifts"
+            className="inline-block rounded-lg border border-club/40 px-6 py-2.5 font-semibold font-body text-club transition hover:bg-club/10"
+          >
+            🎁 Buy something for someone at the Gift Shop
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
