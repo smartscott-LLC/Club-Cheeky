@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       announcements: {
@@ -42,6 +47,39 @@ export type Database = {
           link?: string | null
           message?: string
           starts_at?: string
+        }
+        Relationships: []
+      }
+      avatars: {
+        Row: {
+          config: Json
+          created_at: string
+          generation_type: string
+          id: string
+          image_url: string | null
+          name: string
+          rpg_class: string
+          user_id: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          generation_type?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          rpg_class?: string
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          generation_type?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          rpg_class?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1325,6 +1363,27 @@ export type Database = {
         }
         Relationships: []
       }
+      icebreaker_usage: {
+        Row: {
+          day: string
+          id: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          day?: string
+          id?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          id?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       l3_picks: {
         Row: {
           choice: string
@@ -1897,11 +1956,17 @@ export type Database = {
           chat_messages_sent: number
           created_at: string
           display_name: string
+          drinking: string | null
           gender: string | null
+          has_kids: boolean | null
+          hobbies: string[] | null
           id: string
           interested_in: string
+          living_arrangement: string | null
           message_retention_days: number
           one_liner: string | null
+          religion: string | null
+          smoking: string | null
           test_member: boolean
           updated_at: string
           verified_at: string | null
@@ -1914,11 +1979,17 @@ export type Database = {
           chat_messages_sent?: number
           created_at?: string
           display_name?: string
+          drinking?: string | null
           gender?: string | null
+          has_kids?: boolean | null
+          hobbies?: string[] | null
           id: string
           interested_in?: string
+          living_arrangement?: string | null
           message_retention_days?: number
           one_liner?: string | null
+          religion?: string | null
+          smoking?: string | null
           test_member?: boolean
           updated_at?: string
           verified_at?: string | null
@@ -1931,11 +2002,17 @@ export type Database = {
           chat_messages_sent?: number
           created_at?: string
           display_name?: string
+          drinking?: string | null
           gender?: string | null
+          has_kids?: boolean | null
+          hobbies?: string[] | null
           id?: string
           interested_in?: string
+          living_arrangement?: string | null
           message_retention_days?: number
           one_liner?: string | null
+          religion?: string | null
+          smoking?: string | null
           test_member?: boolean
           updated_at?: string
           verified_at?: string | null
@@ -2470,6 +2547,18 @@ export type Database = {
         }
         Relationships: []
       }
+      test_foo: {
+        Row: {
+          id: number | null
+        }
+        Insert: {
+          id?: number | null
+        }
+        Update: {
+          id?: number | null
+        }
+        Relationships: []
+      }
       token_ledger: {
         Row: {
           created_at: string
@@ -2924,7 +3013,6 @@ export type Database = {
         }[]
       }
       matchmaker_pick_draft: { Args: { p_target: string }; Returns: undefined }
-      matchmaker_unpick_draft: { Args: { p_target: string }; Returns: undefined }
       matchmaker_respond_unlock: {
         Args: { p_accept: boolean; p_unlock_id: string }
         Returns: undefined
@@ -2947,6 +3035,10 @@ export type Database = {
         }[]
       }
       matchmaker_start_draft: { Args: never; Returns: string }
+      matchmaker_unpick_draft: {
+        Args: { p_target: string }
+        Returns: undefined
+      }
       next_event_minutes: { Args: { p_kind: string }; Returns: number }
       owner_grant: {
         Args: {
@@ -3048,23 +3140,28 @@ export type Database = {
         Returns: undefined
       }
       taskbar_state: {
-        Args: never
+        Args: { p_user?: string }
         Returns: {
           blind_date_joins_today: number
+          blind_free_remaining: number
           checked_in_today: boolean
+          dance_free_remaining: number
           gift_ready: boolean
           gift_ready_in_minutes: number
           icebreakers_used_today: number
+          l3_trios_used_today: number
           matchmaker_plays_left: number
           messages_sent_today: number
           new_people_today: number
-          tier: string
+          rooftop_free_remaining: number
+          speed_free_remaining: number
           swipes_today: number
+          tier: string
         }[]
       }
-      use_icebreaker: { Args: never; Returns: undefined }
       tick_rooftop_events: { Args: never; Returns: undefined }
       tier_rank: { Args: { p_tier: string }; Returns: number }
+      use_icebreaker: { Args: never; Returns: undefined }
     }
     Enums: {
       consent_type: "terms" | "privacy" | "verification" | "best_practices"
@@ -3222,4 +3319,3 @@ export const Constants = {
     },
   },
 } as const
-
